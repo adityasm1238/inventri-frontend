@@ -1,5 +1,5 @@
 import React from "react";
-import { Redirect} from 'react-router-dom';
+import { Redirect,Link} from 'react-router-dom';
 import loginpageImage from "../../images/LoginImage.jpg";
 import {Container, Row, Card, CardBody, Col} from "reactstrap";
 import axios from 'axios';
@@ -12,7 +12,8 @@ class LoginPage extends React.Component{
         this.state = {
             email:'',
             password:'',
-            error:''
+            error:'',
+            isLoading:false
         }
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
@@ -23,17 +24,23 @@ class LoginPage extends React.Component{
     }
     handleSubmit = async event =>{
         event.preventDefault();
+        this.setState({
+            isLoading:true
+        });
         const user = {...this.state};
         if(user.password.length<8)
             this.setState({error:'Password should minimum of length 8'});
         else{
             delete user.error;
             await axios.post(config.apiBaseUri+"/auth/signin",user).then(res => {
+                this.setState({
+                    isLoading:false
+                });
                 localStorage.setItem("access_token",res.data.access_token);
                 localStorage.setItem("id",res.data.user._id);
                 this.props.handleLogin(res.data.user._id,res.data.user.firstname,res.data.access_token);
               }).catch(e=>{
-                  this.setState({error:"Invalid Username or Password"});
+                  this.setState({error:"Invalid Username or Password",isLoading:false});
               });
         }
         
@@ -81,11 +88,23 @@ class LoginPage extends React.Component{
                                                             <button className="btn btn-primary btn-block text-white btn-user" type="submit">Login</button>
                                                             <div className="text-center" style={{color:'red'}}>{(this.state.error)?(this.state.error):('')}</div>
                                                             <hr/>
+                                                            <div className="d-flex justify-content-center">
+                                                            {
+                                                                this.state.isLoading?(
+                                                                    <div className={"spinner-border text-primary mx-3 align-self-center"} role="status">
+                                                                            <span className="sr-only">Loading...</span>
+                                                                        </div>
+                                                                ):null
+                                                            }
+                                                            </div>
+                                                          
                                                         </form>
-                                                    
-                                                        <div className="text-center"><a className="small" href="/register">Create an Account!</a></div>
+                                                      
+                                                        <div className="text-center"><Link className="small" to="/register">Create an Account!</Link></div>
                                                     </div>
+                                                   
                                                 </Col>
+                                                
                                             </Row>
                                         </CardBody>
                                     </Card>
